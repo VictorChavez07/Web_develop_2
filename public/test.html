@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Simon says</title>
+	<link
+		href="styles.css"
+		rel="stylesheet"
+	/>
+</head>
+<body>
+	<div id="main-circle">
+		<div id ="topleftquarter" class="color green" data-color="green"></div>
+		<div id ="toprightquarter"class="color red" data-color="red"></div>
+		<div id ="bottomleftquarter" class="color yellow" data-color="yellow"></div>
+		<div id ="bottomrightquarter"class="color blue" data-color="blue"></div>
+		<button id ="game_button" onclick="beginGame()">
+			Click for the game to start
+	</div>
+	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+	<script>
+		const green = document.getElementById('topleftquarter')
+		const red = document.getElementById('toprightquarter')
+		const yellow = document.getElementById('bottomleftquarter')
+		const blue = document.getElementById('bottomrightquarter')
+		const button = document.getElementById('game_button')
+		const LAST_LEVEL = 10
+
+		class Game {
+			constructor() {
+				this.initialize()
+				this.startSequence()
+				setTimeout(this.nextLvl, 500)
+			}
+			initialize() {
+				this.init_button()
+				this.level = 1
+				this.colors = {
+					0: green, 1: red, 2: yellow, 3: blue,
+				}
+				this.colorsCode = {
+					green: 0, red: 1, yellow: 2, blue: 3,
+				}
+				
+				this.chooseColor = this.chooseColor.bind(this)
+				this.nextLvl = this.nextLvl.bind(this)
+				this.initialize = this.initialize.bind(this)
+			}
+			init_button(){
+				const status = button.classList.contains('hide')
+				if (status){
+					button.classList.remove('hide')
+				}
+				else{
+					button.classList.add('hide')
+				}
+			}
+			startSequence() {
+				this.sequence = new Array(LAST_LEVEL)
+					.fill(0)
+					.map((n) => Math.floor(Math.random() * 4))
+			}
+			nextLvl() {
+				this.sublvl = 0
+				this.lightSequence()
+				this.addClickEvent()
+			}
+			lightColor(numberColor) {
+				this.colors[numberColor].classList.add('light')
+				setTimeout(() => this.turnOffColor(numberColor), 350)
+			}
+			turnOffColor(numberColor) {
+				this.colors[numberColor].classList.remove('light')
+			}
+			lightSequence() {
+				for (let i = 0; i < this.level; i++) {
+					setTimeout(
+						() => this.lightColor(this.sequence[i]),
+						1000 * i
+					)
+				}
+			}
+			addClickEvent() {
+				for (let i = 0; i < 4; i++) {
+					this.colors[i].addEventListener(
+						'click',
+						this.chooseColor
+					)
+				}
+			}
+			deleteClickEvent() {
+				for (let i = 0; i < 4; i++) {
+					this.colors[i].removeEventListener(
+						'click',
+						this.chooseColor
+					)
+				}
+			}
+			chooseColor(evt) {
+				const color = evt.target.dataset.color
+				const colorCode = this.colorsCode[color]
+				this.lightColor(colorCode)
+				if (colorCode === this.sequence[this.sublvl]) {
+					this.sublvl++
+					if (this.sublvl === this.level) {
+						this.level++
+						this.deleteClickEvent()
+						if (this.level === LAST_LEVEL + 1) {
+							this.win()
+						} else {
+							setTimeout(this.nextLvl, 1000)
+						}
+					}
+				} else {
+					this.lose()
+				}
+			}
+			win() {
+				swal('GG').then(this.initialize)
+			}
+			lose() {
+				swal('F').then(() => {
+					this.deleteClickEvent()
+					this.initialize()
+				})
+			}
+		}
+		function beginGame() {
+			window.game = new Game()
+		}
+	</script>
+</body>
+</html>
